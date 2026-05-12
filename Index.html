@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Personaje D&D</title>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #f4e8c1;
+    --parchment-dark: #e8d5a0;
+    --parchment-darker: #d4b87a;
+    --ink: #2c1810;
+    --ink-light: #4a2e1a;
+    --red-accent: #8b1a1a;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --border-color: #8b6914;
+    --shadow: rgba(44,24,16,0.35);
+    --slot-filled: #3a2008;
+    --slot-empty: #c9b07a;
+    --check-bg: #2c1810;
+    --section-bg: rgba(244,232,193,0.6);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a0f05;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, rgba(80,40,10,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(60,30,5,0.3) 0%, transparent 50%);
+    font-family: 'Crimson Text', serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--parchment);
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, #f9f0d3 0%, #f0e0aa 40%, #ecdcb0 100%);
+    border: 3px solid var(--border-color);
+    box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(184,134,11,0.08);
+    padding: 22px;
+    position: relative;
+  }
+
+  /* ── Decorative corners ── */
+  .sheet::before, .sheet::after {
+    content: '⚔';
+    position: absolute;
+    font-size: 1.3rem;
+    color: var(--gold);
+    opacity: 0.5;
+  }
+  .sheet::before { top: 8px; left: 12px; }
+  .sheet::after  { top: 8px; right: 12px; }
+
+  /* ═══ HEADER ═══ */
+  .header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .char-name-block { display: flex; flex-direction: column; gap: 4px; }
+  .field-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    font-weight: 600;
+  }
+  .field-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    padding: 2px 4px;
+    width: 100%;
+    outline: none;
+  }
+  .field-input:focus { border-bottom-color: var(--red-accent); background: rgba(184,134,11,0.07); }
+
+  .title-center {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .header-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field-sm .field-input { font-size: 0.85rem; }
+
+  /* ═══ MAIN GRID ═══ */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr 220px;
+    gap: 12px;
+  }
+
+  /* ── LEFT COLUMN ── */
+  .left-col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Photo upload */
+  .photo-box {
+    position: relative;
+    border: 2px solid var(--border-color);
+    background: #1a0f05;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 3/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .photo-box:hover { border-color: var(--gold-light); }
+  .photo-box img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .photo-box img.visible { display: block; }
+  .photo-placeholder {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    color: rgba(244,232,193,0.5);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .photo-placeholder .plus {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(244,232,193,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    color: rgba(244,232,193,0.5);
+  }
+  .photo-box input[type=file] { display: none; }
+  .photo-box.has-image .photo-placeholder { display: none; }
+
+  /* Stats strip */
+  .combat-stats {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 5px;
+  }
+  .stat-box {
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.25);
+    padding: 4px 3px 3px;
+    text-align: center;
+  }
+  .stat-box .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.42rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+  .stat-box input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    outline: none;
+    padding: 1px 0;
+  }
+
+  /* HP section */
+  .hp-section {
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.2);
+    padding: 7px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 6px;
+  }
+  .hp-block { text-align: center; }
+  .hp-block .field-label { font-size: 0.44rem; line-height: 1.2; }
+  .hp-block input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--red-accent);
+    outline: none;
+  }
+
+  /* Hit dice */
+  .hit-dice-section {
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.2);
+    padding: 6px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .hit-dice-section .field-label { font-size: 0.5rem; }
+  .hit-dice-section input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    outline: none;
+    width: 80px;
+  }
+
+  /* ── MIDDLE COLUMN ── */
+  .mid-col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Ability scores */
+  .abilities-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .ability-card {
+    border: 1.5px solid var(--border-color);
+    background: rgba(255,255,255,0.3);
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    padding: 5px 3px 4px;
+    position: relative;
+  }
+  .ability-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.48rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    font-weight: 600;
+  }
+  .ability-score {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .ability-score-input {
+    width: 40px;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border-color);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--ink);
+    outline: none;
+    padding: 0;
+  }
+  .ability-mod {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 30px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 2px;
+    margin-top: 2px;
+  }
+
+  /* Skills */
+  .section-box {
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.18);
+    padding: 7px 8px;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red-accent);
+    text-align: center;
+    margin-bottom: 5px;
+    border-bottom: 1px solid var(--parchment-darker);
+    padding-bottom: 3px;
+    font-weight: 700;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 10px;
+  }
+  .skill-row {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.75rem;
+    padding: 1px 0;
+    border-bottom: 1px dotted rgba(139,105,20,0.2);
+  }
+  .skill-proficiency {
+    width: 11px; height: 11px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .skill-proficiency.active { background: var(--ink); }
+  .skill-name { flex: 1; font-family: 'Crimson Text', serif; font-size: 0.78rem; color: var(--ink-light); }
+  .skill-bonus {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ink);
+    min-width: 26px;
+    text-align: right;
+  }
+
+  /* Actions section */
+  .actions-section { display: flex; flex-direction: column; gap: 8px; }
+  .action-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .action-table th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-align: left;
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .action-table td { padding: 3px 4px; border-bottom: 1px dotted rgba(139,105,20,0.25); vertical-align: middle; }
+  .action-table td input {
+    background: transparent;
+    border: none;
+    font-family: 'Crimson Text', serif;
+    font-size: 0.78rem;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+  }
+  .action-table tr:hover td { background: rgba(184,134,11,0.06); }
+  .used-checkbox {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.6rem;
+    color: var(--parchment);
+    background: transparent;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .used-checkbox.checked { background: var(--ink); }
+
+  .add-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--ink-light);
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .add-btn:hover { background: rgba(184,134,11,0.12); color: var(--ink); }
+
+  /* ── RIGHT COLUMN ── */
+  .right-col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Spell slots */
+  .spells-section { display: flex; flex-direction: column; gap: 6px; }
+  .slot-row {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .slot-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    width: 48px;
+    flex-shrink: 0;
+  }
+  .slots-boxes { display: flex; gap: 3px; flex-wrap: wrap; }
+  .slot-box {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--border-color);
+    background: var(--slot-empty);
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .slot-box.used { background: var(--slot-filled); }
+
+  /* Prepared spells */
+  .prepared-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+  .spell-card {
+    border: 1px solid var(--border-color);
+    background: #1a0f05;
+    aspect-ratio: 1;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .spell-card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .spell-card img.visible { display: block; }
+  .spell-card .spell-placeholder {
+    color: rgba(244,232,193,0.3);
+    font-size: 1.2rem;
+  }
+  .spell-card input[type=file] { display: none; }
+  .spell-card .spell-name-input {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.65);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.42rem;
+    padding: 2px 3px;
+    border: none;
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .spell-card .spell-used-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    color: rgba(244,232,193,0.7);
+  }
+  .spell-card.used .spell-used-overlay { display: flex; }
+  .spell-toggle-btn {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 14px; height: 14px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(244,232,193,0.3);
+    color: var(--parchment);
+    font-size: 0.55rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    transition: background 0.15s;
+  }
+  .spell-toggle-btn:hover { background: rgba(139,26,26,0.7); }
+
+  /* Magic items */
+  .magic-items-list { display: flex; flex-direction: column; gap: 7px; }
+  .magic-item {
+    display: flex; align-items: flex-start; gap: 7px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.18);
+    position: relative;
+  }
+  .magic-item-img {
+    width: 36px; height: 36px;
+    background: #1a0f05;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(244,232,193,0.3);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .magic-item-img img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .magic-item-img img.visible { display: block; }
+  .magic-item-img input[type=file] { display: none; }
+  .magic-item-info { flex: 1; min-width: 0; }
+  .magic-item-name {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .magic-item-desc {
+    background: transparent;
+    border: none;
+    font-family: 'Crimson Text', serif;
+    font-size: 0.7rem;
+    color: var(--ink-light);
+    font-style: italic;
+    outline: none;
+    width: 100%;
+    resize: none;
+    line-height: 1.3;
+  }
+  .attunement-badge {
+    position: absolute;
+    top: 3px; right: 3px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.4rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 1px 4px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    background: rgba(184,134,11,0.08);
+  }
+  .item-used-box {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem;
+    color: var(--parchment);
+    background: transparent;
+    flex-shrink: 0;
+    align-self: center;
+    transition: background 0.15s;
+  }
+  .item-used-box.checked { background: var(--ink); }
+
+  /* ── Divider ornament ── */
+  .ornament {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    margin: 2px 0;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--parchment-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+  /* ── Responsive minor tweaks ── */
+  @media (max-width: 820px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .abilities-grid { grid-template-columns: repeat(3,1fr); }
+  }
+
+  .delete-row-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-light);
+    cursor: pointer;
+    font-size: 0.7rem;
+    opacity: 0.4;
+    padding: 0 2px;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .delete-row-btn:hover { opacity: 1; color: var(--red-accent); }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a0f05;
+    border: 1.5px solid var(--border-color);
+    padding: 8px 16px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.7);
+    z-index: 1000;
+    border-radius: 2px;
+  }
+  .toolbar-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .toolbar-btn:hover { background: rgba(184,134,11,0.18); border-color: var(--gold-light); }
+  .toolbar-btn.primary { border-color: var(--gold); color: var(--gold-light); }
+  .toolbar-btn.danger  { border-color: #8b1a1a; color: #c0504f; }
+  .save-status {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    color: rgba(244,232,193,0.45);
+    text-transform: uppercase;
+    min-width: 90px;
+    text-align: center;
+    transition: color 0.3s;
+  }
+  .save-status.ok  { color: #7cb87c; }
+  .save-status.err { color: #c0504f; }
+
+  .slot-selector {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a0f05;
+    border: 1.5px solid var(--border-color);
+    padding: 12px 18px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 260px;
+  }
+  .slot-selector.visible { display: flex; }
+  .slot-selector-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    margin-bottom: 3px;
+  }
+  .slot-selector select {
+    background: #2c1810;
+    border: 1px solid var(--border-color);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    outline: none;
+    width: 100%;
+  }
+  .slot-selector-btns { display: flex; gap: 6px; }
+  .slot-selector-btns button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    padding: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .slot-selector-btns button:hover { background: rgba(184,134,11,0.2); }
+  .slot-selector-btns button.confirm { border-color: var(--gold); color: var(--gold-light); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="header">
+    <div class="char-name-block">
+      <span class="field-label">Nombre del Personaje</span>
+      <input class="field-input" type="text" placeholder="Escribe el nombre..." style="font-size:1.2rem;">
+    </div>
+    <div class="title-center">✦ Ficha de Personaje ✦<br><span style="font-size:0.5rem;letter-spacing:0.3em;">DUNGEONS & DRAGONS 2024</span></div>
+    <div class="header-right">
+      <div class="field-sm">
+        <span class="field-label">Clase / Nivel</span>
+        <input class="field-input" type="text" placeholder="Paladín 5">
+      </div>
+      <div class="field-sm">
+        <span class="field-label">Raza</span>
+        <input class="field-input" type="text" placeholder="Humano">
+      </div>
+      <div class="field-sm">
+        <span class="field-label">Alineamiento</span>
+        <input class="field-input" type="text" placeholder="Legal Bueno">
+      </div>
+      <div class="field-sm">
+        <span class="field-label">PX</span>
+        <input class="field-input" type="number" placeholder="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN GRID ═══ -->
+  <div class="main-grid">
+
+    <!-- ── LEFT COL ── -->
+    <div class="left-col">
+
+      <!-- Photo -->
+      <div class="photo-box" id="photoBox" onclick="document.getElementById('photoInput').click()">
+        <img id="charPhoto" alt="Personaje">
+        <div class="photo-placeholder">
+          <div class="plus">+</div>
+          <span>Importar Imagen</span>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" onchange="loadPhoto(event)">
+      </div>
+
+      <!-- Combat Stats -->
+      <div class="combat-stats">
+        <div class="stat-box">
+          <div class="stat-label">CA</div>
+          <input type="number" value="10" id="ca">
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Iniciativa</div>
+          <input type="text" value="+0" id="initiative">
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Velocidad</div>
+          <input type="text" value="9m" id="speed">
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Bon. Comp.</div>
+          <input type="text" value="+2" id="profBonus">
+        </div>
+      </div>
+
+      <!-- HP -->
+      <div class="hp-section">
+        <div class="hp-block">
+          <div class="field-label">PV Máx.</div>
+          <input type="number" value="24" id="hpMax">
+        </div>
+        <div class="hp-block">
+          <div class="field-label">PV Actuales</div>
+          <input type="number" value="24" id="hpCurrent">
+        </div>
+        <div class="hp-block">
+          <div class="field-label">PV Temp.</div>
+          <input type="number" value="0" id="hpTemp">
+        </div>
+      </div>
+
+      <!-- Hit Dice -->
+      <div class="hit-dice-section">
+        <div class="field-label">Dados de Golpe</div>
+        <input type="text" value="3d8" id="hitDice" placeholder="ej: 3d8">
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- ── MID COL ── -->
+    <div class="mid-col">
+
+      <!-- Ability Scores -->
+      <div class="abilities-grid" id="abilitiesGrid">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- Skills -->
+      <div class="section-box">
+        <div class="section-title">✦ Habilidades ✦</div>
+        <div class="skills-grid" id="skillsGrid">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="section-box">
+        <div class="section-title">✦ Acciones ✦</div>
+        <table class="action-table" id="actionsTable">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Bonif.</th>
+              <th>Daño / Efecto</th>
+              <th>Usado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="actionsTbody"></tbody>
+        </table>
+        <button class="add-btn" onclick="addActionRow('actionsTbody')">+ Agregar Acción</button>
+      </div>
+
+      <!-- Bonus Actions -->
+      <div class="section-box">
+        <div class="section-title">✦ Acciones Adicionales / Reacciones ✦</div>
+        <table class="action-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Bonif.</th>
+              <th>Daño / Efecto</th>
+              <th>Usado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bonusActionsTbody"></tbody>
+        </table>
+        <button class="add-btn" onclick="addActionRow('bonusActionsTbody')">+ Agregar Acción Adicional</button>
+      </div>
+
+    </div><!-- /mid-col -->
+
+    <!-- ── RIGHT COL ── -->
+    <div class="right-col">
+
+      <!-- Conjuros -->
+      <div class="section-box">
+        <div class="section-title">✦ Conjuros ✦</div>
+        <div class="spells-section" id="spellSlots">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <!-- Prepared Spells -->
+      <div class="section-box">
+        <div class="section-title">✦ Conjuros Preparados ✦</div>
+        <div class="prepared-grid" id="preparedGrid">
+          <!-- Generated by JS -->
+        </div>
+        <button class="add-btn" onclick="addSpellCard()" style="margin-top:6px">+ Agregar Conjuro</button>
+      </div>
+
+      <!-- Magic Items -->
+      <div class="section-box">
+        <div class="section-title">✦ Objetos Mágicos ✦</div>
+        <div class="magic-items-list" id="magicItemsList">
+          <!-- Generated by JS -->
+        </div>
+        <button class="add-btn" onclick="addMagicItem()" style="margin-top:6px">+ Agregar Objeto Mágico</button>
+      </div>
+
+    </div><!-- /right-col -->
+
+  </div><!-- /main-grid -->
+
+</div><!-- /sheet -->
+
+<!-- ── SLOT SELECTOR ── -->
+<div class="slot-selector" id="slotSelector">
+  <div class="slot-selector-title">✦ Seleccionar Ficha</div>
+  <select id="slotSelect">
+    <option value="slot1">Personaje 1</option>
+    <option value="slot2">Personaje 2</option>
+    <option value="slot3">Personaje 3</option>
+    <option value="slot4">Personaje 4</option>
+  </select>
+  <div class="slot-selector-btns">
+    <button onclick="loadSlot()">⬇ Cargar</button>
+    <button class="confirm" onclick="saveSlot()">⬆ Guardar aquí</button>
+    <button onclick="deleteSlot()" style="border-color:#8b1a1a;color:#c0504f">✕ Borrar</button>
+    <button onclick="closeSlotPanel()">Cerrar</button>
+  </div>
+</div>
+
+<!-- ── TOOLBAR ── -->
+<div class="toolbar">
+  <button class="toolbar-btn primary" onclick="manualSave()">💾 Guardar</button>
+  <button class="toolbar-btn" onclick="toggleSlotPanel()">📂 Fichas</button>
+  <div class="save-status" id="saveStatus">— sin cambios —</div>
+  <button class="toolbar-btn" onclick="downloadHTML()">⬇ Descargar HTML</button>
+  <button class="toolbar-btn danger" onclick="confirmReset()">🗑 Limpiar</button>
+</div>
+
+<script>
+// ═══ ABILITY SCORES ═══
+const ABILITIES = [
+  { key:'str', name:'Fuerza' },
+  { key:'dex', name:'Destreza' },
+  { key:'con', name:'Constitución' },
+  { key:'int', name:'Inteligencia' },
+  { key:'wis', name:'Sabiduría' },
+  { key:'cha', name:'Carisma' },
+];
+const abilityScores = { str:10, dex:10, con:10, int:10, wis:10, cha:10 };
+
+function calcMod(score) {
+  const m = Math.floor((score - 10) / 2);
+  return (m >= 0 ? '+' : '') + m;
+}
+
+function renderAbilities() {
+  const grid = document.getElementById('abilitiesGrid');
+  grid.innerHTML = '';
+  ABILITIES.forEach(ab => {
+    const card = document.createElement('div');
+    card.className = 'ability-card';
+    card.innerHTML = `
+      <div class="ability-name">${ab.name.slice(0,3).toUpperCase()}</div>
+      <input class="ability-score-input" type="number" value="${abilityScores[ab.key]}" id="score-${ab.key}" min="1" max="30">
+      <div class="ability-mod" id="mod-${ab.key}">${calcMod(abilityScores[ab.key])}</div>
+    `;
+    grid.appendChild(card);
+    const inp = card.querySelector('input');
+    inp.addEventListener('input', () => {
+      const v = parseInt(inp.value) || 10;
+      abilityScores[ab.key] = v;
+      document.getElementById('mod-'+ab.key).textContent = calcMod(v);
+      updateSkills();
+      updateInitiative();
+    });
+  });
+}
+
+// ═══ SKILLS (DnD 2024) ═══
+const SKILLS_DATA = [
+  { name:'Atletismo',       ability:'str' },
+  { name:'Acrobacias',      ability:'dex' },
+  { name:'Juego de Manos',  ability:'dex' },
+  { name:'Sigilo',          ability:'dex' },
+  { name:'Arcanos',         ability:'int' },
+  { name:'Historia',        ability:'int' },
+  { name:'Investigación',   ability:'int' },
+  { name:'Naturaleza',      ability:'int' },
+  { name:'Religión',        ability:'int' },
+  { name:'Perspicacia',     ability:'wis' },
+  { name:'Adiestramiento',  ability:'wis' },
+  { name:'Medicina',        ability:'wis' },
+  { name:'Percepción',      ability:'wis' },
+  { name:'Supervivencia',   ability:'wis' },
+  { name:'Engaño',          ability:'cha' },
+  { name:'Intimidación',    ability:'cha' },
+  { name:'Interpretación',  ability:'cha' },
+  { name:'Persuasión',      ability:'cha' },
+];
+const skillProfs = {};
+
+function getProfBonus() {
+  const raw = document.getElementById('profBonus').value;
+  const n = parseInt(raw.replace('+','')) || 2;
+  return n;
+}
+
+function updateSkills() {
+  SKILLS_DATA.forEach((sk, i) => {
+    const modVal = Math.floor((abilityScores[sk.ability] - 10) / 2);
+    const prof = skillProfs[sk.name] ? getProfBonus() : 0;
+    const total = modVal + prof;
+    const bonusEl = document.getElementById('skbonus-'+i);
+    if (bonusEl) bonusEl.textContent = (total >= 0 ? '+' : '') + total;
+  });
+}
+
+function updateInitiative() {
+  const dexMod = Math.floor((abilityScores.dex - 10) / 2);
+  const initEl = document.getElementById('initiative');
+  if (initEl && !initEl.dataset.manual) {
+    initEl.value = (dexMod >= 0 ? '+' : '') + dexMod;
+  }
+}
+
+function renderSkills() {
+  const grid = document.getElementById('skillsGrid');
+  grid.innerHTML = '';
+  SKILLS_DATA.forEach((sk, i) => {
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    const modVal = Math.floor((abilityScores[sk.ability] - 10) / 2);
+    const total = modVal;
+    row.innerHTML = `
+      <div class="skill-proficiency" id="skprof-${i}" onclick="toggleSkillProf(${i}, '${sk.name}')"></div>
+      <div class="skill-name">${sk.name} <span style="font-size:0.6rem;color:var(--ink-light);opacity:0.6">(${sk.ability.toUpperCase()})</span></div>
+      <div class="skill-bonus" id="skbonus-${i}">${(total >= 0 ? '+' : '') + total}</div>
+    `;
+    grid.appendChild(row);
+  });
+}
+
+function toggleSkillProf(i, name) {
+  skillProfs[name] = !skillProfs[name];
+  const el = document.getElementById('skprof-'+i);
+  el.classList.toggle('active', !!skillProfs[name]);
+  updateSkills();
+}
+
+// ═══ ACTIONS TABLE ═══
+function addActionRow(tbodyId, name='', bonus='', damage='') {
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" value="${name}" placeholder="Nombre"></td>
+    <td><input type="text" value="${bonus}" placeholder="+0" style="width:36px"></td>
+    <td><input type="text" value="${damage}" placeholder="1d6+2"></td>
+    <td style="text-align:center">
+      <div class="used-checkbox" onclick="toggleCheck(this)"></div>
+    </td>
+    <td><button class="delete-row-btn" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+}
+
+// ═══ SPELL SLOTS ═══
+const SPELL_SLOT_COUNTS = [0, 4, 3, 3, 3, 3, 2, 2, 1, 1];
+
+function renderSpellSlots() {
+  const container = document.getElementById('spellSlots');
+  container.innerHTML = '';
+  for (let lvl = 1; lvl <= 9; lvl++) {
+    const count = SPELL_SLOT_COUNTS[lvl];
+    const row = document.createElement('div');
+    row.className = 'slot-row';
+    const boxes = Array.from({length: count}, (_,i) => `<div class="slot-box" data-lvl="${lvl}" data-i="${i}" onclick="toggleSlot(this)"></div>`).join('');
+    const countInput = `<input type="number" min="0" max="9" value="${count}" style="width:22px;background:transparent;border:none;border-bottom:1px solid var(--border-color);text-align:center;font-family:'Cinzel',serif;font-size:0.65rem;color:var(--ink);outline:none" onchange="rebuildLevel(${lvl},this.value)">`;
+    row.innerHTML = `<div class="slot-label">Nivel ${lvl}</div><div class="slots-boxes" id="slotboxes-${lvl}">${boxes}</div>${countInput}`;
+    container.appendChild(row);
+  }
+}
+
+function toggleSlot(el) { el.classList.toggle('used'); }
+
+function rebuildLevel(lvl, count) {
+  const box = document.getElementById('slotboxes-'+lvl);
+  const n = Math.max(0, Math.min(10, parseInt(count)||0));
+  box.innerHTML = Array.from({length: n}, (_,i) =>
+    `<div class="slot-box" data-lvl="${lvl}" data-i="${i}" onclick="toggleSlot(this)"></div>`
+  ).join('');
+}
+
+// ═══ PREPARED SPELLS ═══
+let spellCount = 0;
+
+function addSpellCard(imgSrc='') {
+  spellCount++;
+  const id = 'spell-'+spellCount;
+  const grid = document.getElementById('preparedGrid');
+  const card = document.createElement('div');
+  card.className = 'spell-card';
+  card.id = id;
+  card.innerHTML = `
+    <img id="img-${id}" alt="conjuro" ${imgSrc ? 'src="'+imgSrc+'"' : ''} class="${imgSrc?'visible':''}">
+    <div class="spell-placeholder">${imgSrc?'':'✦'}</div>
+    <div class="spell-used-overlay">✕</div>
+    <div class="spell-toggle-btn" onclick="toggleSpellUsed('${id}')" title="Marcar como usado">✕</div>
+    <input type="file" id="file-${id}" accept="image/*" onchange="loadSpellImg(event,'${id}')">
+    <input type="text" class="spell-name-input" placeholder="Nombre conjuro">
+  `;
+  card.querySelector('.spell-placeholder').addEventListener('click', () => {
+    document.getElementById('file-'+id).click();
+  });
+  card.querySelector('img').addEventListener('click', () => {
+    document.getElementById('file-'+id).click();
+  });
+  grid.appendChild(card);
+}
+
+function toggleSpellUsed(id) {
+  document.getElementById(id).classList.toggle('used');
+}
+
+function loadSpellImg(event, id) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('img-'+id);
+    img.src = e.target.result;
+    img.classList.add('visible');
+    document.querySelector('#'+id+' .spell-placeholder').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══ PHOTO ═══
+function loadPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('charPhoto');
+    img.src = e.target.result;
+    img.classList.add('visible');
+    document.getElementById('photoBox').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══ MAGIC ITEMS ═══
+let magicItemCount = 0;
+
+function addMagicItem(attunement=false, name='', desc='') {
+  magicItemCount++;
+  const id = 'mitem-'+magicItemCount;
+  const list = document.getElementById('magicItemsList');
+  const div = document.createElement('div');
+  div.className = 'magic-item';
+  div.innerHTML = `
+    ${attunement ? '<div class="attunement-badge">Sintonía</div>' : ''}
+    <div class="magic-item-img" id="mimg-${id}" onclick="document.getElementById('mfile-${id}').click()">
+      <img id="mphoto-${id}" alt="">
+      <span>⚗</span>
+      <input type="file" id="mfile-${id}" accept="image/*" onchange="loadItemImg(event,'${id}')">
+    </div>
+    <div class="magic-item-info">
+      <input type="text" class="magic-item-name" value="${name}" placeholder="Nombre del objeto...">
+      <textarea class="magic-item-desc" rows="2" placeholder="Descripción y efectos...">${desc}</textarea>
+    </div>
+    <div class="item-used-box" onclick="toggleCheck(this)"></div>
+    <button class="delete-row-btn" style="position:absolute;top:2px;right:2px" onclick="this.parentElement.remove()">✕</button>
+  `;
+  list.appendChild(div);
+}
+
+function loadItemImg(event, id) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('mphoto-'+id);
+    img.src = e.target.result;
+    img.classList.add('visible');
+    document.querySelector('#mimg-'+id+' span').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══ INITIATIVE auto ═══
+document.addEventListener('DOMContentLoaded', () => {
+  const initEl = document.getElementById('initiative');
+  initEl.addEventListener('input', () => { initEl.dataset.manual = '1'; });
+});
+
+// ════════════════════════════════════════════════
+// ═══ PERSISTENCIA / BASE DE DATOS (localStorage) ═══
+// ════════════════════════════════════════════════
+
+const AUTOSAVE_KEY = 'dnd_sheet_autosave';
+let autoSaveTimer = null;
+
+// ─── Collect all sheet data into a plain object ───
+function collectData() {
+  const data = {};
+
+  // Header fields
+  data.charName   = document.querySelector('.char-name-block .field-input')?.value || '';
+  data.charClass  = document.querySelectorAll('.header-right .field-input')[0]?.value || '';
+  data.charRace   = document.querySelectorAll('.header-right .field-input')[1]?.value || '';
+  data.charAlign  = document.querySelectorAll('.header-right .field-input')[2]?.value || '';
+  data.charPx     = document.querySelectorAll('.header-right .field-input')[3]?.value || '';
+
+  // Combat stats
+  data.ca         = document.getElementById('ca')?.value || '';
+  data.initiative = document.getElementById('initiative')?.value || '';
+  data.speed      = document.getElementById('speed')?.value || '';
+  data.profBonus  = document.getElementById('profBonus')?.value || '';
+  data.hpMax      = document.getElementById('hpMax')?.value || '';
+  data.hpCurrent  = document.getElementById('hpCurrent')?.value || '';
+  data.hpTemp     = document.getElementById('hpTemp')?.value || '';
+  data.hitDice    = document.getElementById('hitDice')?.value || '';
+
+  // Ability scores
+  data.abilities = {};
+  ABILITIES.forEach(ab => {
+    data.abilities[ab.key] = document.getElementById('score-'+ab.key)?.value || '10';
+  });
+
+  // Skill profs
+  data.skillProfs = { ...skillProfs };
+
+  // Spell slots used state
+  data.spellSlots = {};
+  document.querySelectorAll('.slot-box').forEach(box => {
+    const key = `${box.dataset.lvl}-${box.dataset.i}`;
+    data.spellSlots[key] = box.classList.contains('used');
+  });
+
+  // Spell slot counts per level
+  data.spellSlotCounts = {};
+  for (let lvl=1; lvl<=9; lvl++) {
+    const boxes = document.querySelectorAll(`#slotboxes-${lvl} .slot-box`);
+    data.spellSlotCounts[lvl] = boxes.length;
+  }
+
+  // Actions
+  data.actions = collectTableRows('actionsTbody');
+  data.bonusActions = collectTableRows('bonusActionsTbody');
+
+  // Prepared spells
+  data.spells = [];
+  document.querySelectorAll('.spell-card').forEach(card => {
+    data.spells.push({
+      name: card.querySelector('.spell-name-input')?.value || '',
+      used: card.classList.contains('used'),
+      img:  card.querySelector('img')?.src || '',
+    });
+  });
+
+  // Magic items
+  data.magicItems = [];
+  document.querySelectorAll('.magic-item').forEach(item => {
+    data.magicItems.push({
+      name:       item.querySelector('.magic-item-name')?.value || '',
+      desc:       item.querySelector('.magic-item-desc')?.value || '',
+      attunement: !!item.querySelector('.attunement-badge'),
+      used:       item.querySelector('.item-used-box')?.classList.contains('checked') || false,
+      img:        item.querySelector('.magic-item-img img')?.src || '',
+    });
+  });
+
+  // Character photo
+  const photo = document.getElementById('charPhoto');
+  data.charPhoto = photo?.classList.contains('visible') ? photo.src : '';
+
+  return data;
+}
+
+function collectTableRows(tbodyId) {
+  const rows = [];
+  document.querySelectorAll(`#${tbodyId} tr`).forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const usedBox = tr.querySelector('.used-checkbox');
+    rows.push({
+      name:   inputs[0]?.value || '',
+      bonus:  inputs[1]?.value || '',
+      damage: inputs[2]?.value || '',
+      used:   usedBox?.classList.contains('checked') || false,
+    });
+  });
+  return rows;
+}
+
+// ─── Apply saved data to the DOM ───
+function applyData(data) {
+  if (!data) return;
+
+  const headerInputs = document.querySelectorAll('.header .field-input');
+  if (headerInputs[0]) headerInputs[0].value = data.charName   || '';
+  const rightInputs = document.querySelectorAll('.header-right .field-input');
+  if (rightInputs[0]) rightInputs[0].value = data.charClass  || '';
+  if (rightInputs[1]) rightInputs[1].value = data.charRace   || '';
+  if (rightInputs[2]) rightInputs[2].value = data.charAlign  || '';
+  if (rightInputs[3]) rightInputs[3].value = data.charPx     || '';
+
+  const setVal = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  setVal('ca', data.ca); setVal('initiative', data.initiative);
+  setVal('speed', data.speed); setVal('profBonus', data.profBonus);
+  setVal('hpMax', data.hpMax); setVal('hpCurrent', data.hpCurrent);
+  setVal('hpTemp', data.hpTemp); setVal('hitDice', data.hitDice);
+
+  // Abilities
+  if (data.abilities) {
+    ABILITIES.forEach(ab => {
+      const v = parseInt(data.abilities[ab.key]) || 10;
+      abilityScores[ab.key] = v;
+      const inp = document.getElementById('score-'+ab.key);
+      const mod = document.getElementById('mod-'+ab.key);
+      if (inp) inp.value = v;
+      if (mod) mod.textContent = calcMod(v);
+    });
+    updateSkills();
+  }
+
+  // Skill profs
+  if (data.skillProfs) {
+    Object.assign(skillProfs, data.skillProfs);
+    SKILLS_DATA.forEach((sk, i) => {
+      const el = document.getElementById('skprof-'+i);
+      if (el) el.classList.toggle('active', !!skillProfs[sk.name]);
+    });
+    updateSkills();
+  }
+
+  // Spell slot counts & used state
+  if (data.spellSlotCounts) {
+    for (let lvl=1; lvl<=9; lvl++) {
+      rebuildLevel(lvl, data.spellSlotCounts[lvl] ?? SPELL_SLOT_COUNTS[lvl]);
+    }
+  }
+  if (data.spellSlots) {
+    document.querySelectorAll('.slot-box').forEach(box => {
+      const key = `${box.dataset.lvl}-${box.dataset.i}`;
+      if (data.spellSlots[key]) box.classList.add('used');
+    });
+  }
+
+  // Actions
+  const atbody = document.getElementById('actionsTbody');
+  const btbody = document.getElementById('bonusActionsTbody');
+  atbody.innerHTML = ''; btbody.innerHTML = '';
+  (data.actions||[]).forEach(r => addActionRow('actionsTbody', r.name, r.bonus, r.damage, r.used));
+  (data.bonusActions||[]).forEach(r => addActionRow('bonusActionsTbody', r.name, r.bonus, r.damage, r.used));
+
+  // Spells
+  const grid = document.getElementById('preparedGrid');
+  grid.innerHTML = '';
+  spellCount = 0;
+  (data.spells||[]).forEach(sp => {
+    addSpellCard('');
+    const id = 'spell-'+spellCount;
+    const card = document.getElementById(id);
+    if (!card) return;
+    card.querySelector('.spell-name-input').value = sp.name || '';
+    if (sp.used) card.classList.add('used');
+    if (sp.img && sp.img.startsWith('data:')) {
+      const img = card.querySelector('img');
+      img.src = sp.img;
+      img.classList.add('visible');
+      const ph = card.querySelector('.spell-placeholder');
+      if (ph) ph.style.display = 'none';
+    }
+  });
+
+  // Magic items
+  const list = document.getElementById('magicItemsList');
+  list.innerHTML = '';
+  magicItemCount = 0;
+  (data.magicItems||[]).forEach(item => {
+    addMagicItem(item.attunement, item.name, item.desc);
+    const id = 'mitem-'+magicItemCount;
+    const el = document.querySelector(`#magicItemsList .magic-item:last-child`);
+    if (item.used && el) {
+      const box = el.querySelector('.item-used-box');
+      if (box) { box.classList.add('checked'); box.textContent = '✓'; }
+    }
+    if (item.img && item.img.startsWith('data:')) {
+      const img = document.getElementById('mphoto-'+id);
+      if (img) { img.src = item.img; img.classList.add('visible'); }
+      const span = document.querySelector(`#mimg-${id} span`);
+      if (span) span.style.display = 'none';
+    }
+  });
+
+  // Photo
+  if (data.charPhoto && data.charPhoto.startsWith('data:')) {
+    const photo = document.getElementById('charPhoto');
+    photo.src = data.charPhoto;
+    photo.classList.add('visible');
+    document.getElementById('photoBox').classList.add('has-image');
+  }
+}
+
+// ─── addActionRow override to support 'used' param ───
+const _origAddActionRow = addActionRow;
+// (redefine below to accept used param)
+
+// ─── Save / Load ───
+function saveToKey(key) {
+  try {
+    const data = collectData();
+    localStorage.setItem(key, JSON.stringify(data));
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function loadFromKey(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function manualSave() {
+  const ok = saveToKey(AUTOSAVE_KEY);
+  showStatus(ok ? 'Guardado ✓' : 'Error al guardar', ok ? 'ok' : 'err');
+}
+
+function showStatus(msg, cls='ok') {
+  const el = document.getElementById('saveStatus');
+  el.textContent = msg;
+  el.className = 'save-status ' + cls;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = '— sin cambios —'; el.className = 'save-status'; }, 3000);
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    saveToKey(AUTOSAVE_KEY);
+    showStatus('Autoguardado ✓', 'ok');
+  }, 2000);
+}
+
+// ─── Slot panel ───
+function toggleSlotPanel() {
+  const p = document.getElementById('slotSelector');
+  p.classList.toggle('visible');
+  if (p.classList.contains('visible')) updateSlotLabels();
+}
+function closeSlotPanel() { document.getElementById('slotSelector').classList.remove('visible'); }
+
+function updateSlotLabels() {
+  const sel = document.getElementById('slotSelect');
+  Array.from(sel.options).forEach(opt => {
+    const data = loadFromKey(opt.value);
+    const name = data?.charName;
+    const base = ['Personaje 1','Personaje 2','Personaje 3','Personaje 4'][parseInt(opt.value.replace('slot',''))-1];
+    opt.text = name ? `${base} — ${name}` : `${base} (vacío)`;
+  });
+}
+
+function saveSlot() {
+  const key = document.getElementById('slotSelect').value;
+  saveToKey(key);
+  showStatus('Guardado en '+key+' ✓', 'ok');
+  updateSlotLabels();
+}
+
+function loadSlot() {
+  const key = document.getElementById('slotSelect').value;
+  const data = loadFromKey(key);
+  if (!data) { showStatus('Slot vacío', 'err'); return; }
+  applyData(data);
+  closeSlotPanel();
+  showStatus('Cargado ✓', 'ok');
+}
+
+function deleteSlot() {
+  const key = document.getElementById('slotSelect').value;
+  localStorage.removeItem(key);
+  showStatus('Slot borrado', 'ok');
+  updateSlotLabels();
+}
+
+function confirmReset() {
+  if (confirm('¿Limpiar toda la ficha? Esto no se puede deshacer.')) {
+    document.querySelectorAll('input[type=text], input[type=number]').forEach(i => {
+      if (!['ca','initiative','speed','profBonus','hpMax','hpCurrent','hpTemp','hitDice'].includes(i.id)) i.value = '';
+    });
+    document.getElementById('ca').value = '10';
+    document.getElementById('initiative').value = '+0';
+    document.getElementById('speed').value = '9m';
+    document.getElementById('profBonus').value = '+2';
+    document.getElementById('hpMax').value = '0';
+    document.getElementById('hpCurrent').value = '0';
+    document.getElementById('hpTemp').value = '0';
+    document.getElementById('hitDice').value = '';
+    document.getElementById('actionsTbody').innerHTML = '';
+    document.getElementById('bonusActionsTbody').innerHTML = '';
+    document.getElementById('preparedGrid').innerHTML = '';
+    document.getElementById('magicItemsList').innerHTML = '';
+    spellCount = 0; magicItemCount = 0;
+    ABILITIES.forEach(ab => { abilityScores[ab.key] = 10; });
+    renderAbilities(); renderSkills(); renderSpellSlots();
+    showStatus('Ficha limpiada', 'ok');
+  }
+}
+
+// ─── Download HTML with embedded data ───
+function downloadHTML() {
+  const data = collectData();
+  const dataJson = JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>');
+  // Inject auto-load script
+  const injection = `<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    try {
+      var saved = ${dataJson};
+      if (typeof applyData === 'function') applyData(saved);
+    } catch(e) { console.error('Error cargando datos:', e); }
+  }, 300);
+});
+<\/script>`;
+
+  const currentHTML = document.documentElement.outerHTML;
+  // Insert before </body>
+  const finalHTML = currentHTML.replace('</body>', injection + '</body>');
+  const blob = new Blob(['<!DOCTYPE html>\n' + finalHTML], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const charName = document.querySelector('.char-name-block .field-input')?.value || 'personaje';
+  a.download = `ficha-dnd-${charName.replace(/\s+/g,'-').toLowerCase() || 'personaje'}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showStatus('Descargando...', 'ok');
+}
+
+// ═══ INITIATIVE auto ═══
+document.addEventListener('DOMContentLoaded', () => {
+  const initEl = document.getElementById('initiative');
+  initEl.addEventListener('input', () => { initEl.dataset.manual = '1'; });
+});
+
+// ═══ INIT ═══
+renderAbilities();
+renderSkills();
+renderSpellSlots();
+
+// Try to restore autosave
+const savedData = loadFromKey(AUTOSAVE_KEY);
+if (savedData) {
+  applyData(savedData);
+  showStatus('Cargado ✓', 'ok');
+} else {
+  // Load defaults on first open
+  for (let i=0; i<8; i++) addSpellCard();
+  addActionRow('actionsTbody', 'Ataque con espada', '+5', '1d8+3');
+  addActionRow('actionsTbody', 'Lanzar conjuro', '+4', 'según conjuro');
+  addActionRow('bonusActionsTbody', 'Esquivar', '—', 'Ventaja en DEX');
+  addActionRow('bonusActionsTbody', 'Ataque rápido', '+5', '1d6+3');
+  addMagicItem(true, 'Alas de Media Noche', '+1 a tiradas de ataque y daño');
+  addMagicItem(true, 'Anillo de Invisibilidad', 'Las criaturas tienen desventaja para detectarte');
+  addMagicItem(true, 'Bastón de Fuego', 'Lanza Bola de Fuego (3 cargas)');
+  addMagicItem(false, 'Capa de Protección', '+1 CA y tiradas de salvación');
+  addMagicItem(false, 'Botas de Velocidad', 'Duplican tu velocidad de movimiento');
+}
+
+// Wire up auto-save on any input
+document.addEventListener('input', scheduleAutoSave);
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('slot-box') ||
+      e.target.classList.contains('used-checkbox') ||
+      e.target.classList.contains('item-used-box') ||
+      e.target.classList.contains('skill-proficiency') ||
+      e.target.classList.contains('spell-toggle-btn')) {
+    scheduleAutoSave();
+  }
+});
+</script>
+</body>
+</html>
