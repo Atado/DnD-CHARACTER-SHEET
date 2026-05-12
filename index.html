@@ -70,6 +70,16 @@
     margin-bottom: 14px;
     gap: 12px;
   }
+/*Header responsive*/
+@media (max-width: 600px) {
+  .header {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 6px;
+  }
+}
+
+
   .char-name-block { display: flex; flex-direction: column; gap: 4px; }
   .field-label {
     font-family: 'Cinzel', serif;
@@ -701,25 +711,25 @@
   <div class="header">
     <div class="char-name-block">
       <span class="field-label">Nombre del Personaje</span>
-      <input class="field-input" type="text" placeholder="Escribe el nombre..." style="font-size:1.2rem;">
+      <input class="field-input" id="charName" type="text" placeholder="Escribe el nombre..." style="font-size:1.2rem;">
     </div>
     <div class="title-center">✦ Ficha de Personaje ✦<br><span style="font-size:0.5rem;letter-spacing:0.3em;">DUNGEONS & DRAGONS 2024</span></div>
     <div class="header-right">
       <div class="field-sm">
         <span class="field-label">Clase / Nivel</span>
-        <input class="field-input" type="text" placeholder="Paladín 5">
+        <input class="field-input" id="charClass" type="text" placeholder="ej: Guerrero">
       </div>
       <div class="field-sm">
         <span class="field-label">Raza</span>
-        <input class="field-input" type="text" placeholder="Humano">
+        <input class="field-input" id="charRace" type="text" placeholder="Humano">
       </div>
       <div class="field-sm">
         <span class="field-label">Alineamiento</span>
-        <input class="field-input" type="text" placeholder="Legal Bueno">
+        <input class="field-input" id="charAlign" type="text" placeholder="Legal Bueno">
       </div>
       <div class="field-sm">
         <span class="field-label">PX</span>
-        <input class="field-input" type="number" placeholder="0">
+        <input class="field-input" id="charPx" type="number" placeholder="0">
       </div>
     </div>
   </div>
@@ -935,6 +945,7 @@ function renderAbilities() {
       document.getElementById('mod-'+ab.key).textContent = calcMod(v);
       updateSkills();
       updateInitiative();
+      updateSavingThrows();
     });
   });
 }
@@ -1011,7 +1022,7 @@ function toggleSkillProf(i, name) {
 }
 
 // ═══ ACTIONS TABLE ═══
-function addActionRow(tbodyId, name='', bonus='', damage='') {
+function addActionRow(tbodyId, name='', bonus='', damage='', used=false) {
   const tbody = document.getElementById(tbodyId);
   const tr = document.createElement('tr');
   tr.innerHTML = `
@@ -1019,10 +1030,11 @@ function addActionRow(tbodyId, name='', bonus='', damage='') {
     <td><input type="text" value="${bonus}" placeholder="+0" style="width:36px"></td>
     <td><input type="text" value="${damage}" placeholder="1d6+2"></td>
     <td style="text-align:center">
-      <div class="used-checkbox" onclick="toggleCheck(this)"></div>
+      <div class="used-checkbox" data-used="" onclick="toggleCheck(this)"></div>
     </td>
     <td><button class="delete-row-btn" onclick="this.closest('tr').remove()">✕</button></td>
   `;
+  if (used) { const cb = tr.querySelector('.used-checkbox'); if(cb){ cb.classList.add('checked'); cb.textContent='✓'; } }
   tbody.appendChild(tr);
 }
 
@@ -1173,11 +1185,11 @@ function collectData() {
   const data = {};
 
   // Header fields
-  data.charName   = document.querySelector('.char-name-block .field-input')?.value || '';
-  data.charClass  = document.querySelectorAll('.header-right .field-input')[0]?.value || '';
-  data.charRace   = document.querySelectorAll('.header-right .field-input')[1]?.value || '';
-  data.charAlign  = document.querySelectorAll('.header-right .field-input')[2]?.value || '';
-  data.charPx     = document.querySelectorAll('.header-right .field-input')[3]?.value || '';
+  data.charName   = document.getElementById('charName')?.value || '';
+  data.charClass  = document.getElementById('charClass')?.value || '';
+  data.charRace   = document.getElementById('charRace')?.value || '';
+  data.charAlign  = document.getElementById('charAlign')?.value || '';
+  data.charPx     = document.getElementById('charPx')?.value || '';
 
   // Combat stats
   data.ca         = document.getElementById('ca')?.value || '';
@@ -1197,6 +1209,9 @@ function collectData() {
 
   // Skill profs
   data.skillProfs = { ...skillProfs };
+
+  // Saving throw profs
+  data.savingProfs = { ...savingProfs };
 
   // Spell slots used state
   data.spellSlots = {};
@@ -1264,13 +1279,12 @@ function collectTableRows(tbodyId) {
 function applyData(data) {
   if (!data) return;
 
-  const headerInputs = document.querySelectorAll('.header .field-input');
-  if (headerInputs[0]) headerInputs[0].value = data.charName   || '';
-  const rightInputs = document.querySelectorAll('.header-right .field-input');
-  if (rightInputs[0]) rightInputs[0].value = data.charClass  || '';
-  if (rightInputs[1]) rightInputs[1].value = data.charRace   || '';
-  if (rightInputs[2]) rightInputs[2].value = data.charAlign  || '';
-  if (rightInputs[3]) rightInputs[3].value = data.charPx     || '';
+  const setHeader = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  setHeader('charName',  data.charName);
+  setHeader('charClass', data.charClass);
+  setHeader('charRace',  data.charRace);
+  setHeader('charAlign', data.charAlign);
+  setHeader('charPx',    data.charPx);
 
   const setVal = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
   setVal('ca', data.ca); setVal('initiative', data.initiative);
@@ -1299,6 +1313,12 @@ function applyData(data) {
       if (el) el.classList.toggle('active', !!skillProfs[sk.name]);
     });
     updateSkills();
+  }
+
+  // Saving throw profs
+  if (data.savingProfs) {
+    Object.assign(savingProfs, data.savingProfs);
+    renderSavingThrows();
   }
 
   // Spell slot counts & used state
@@ -1480,6 +1500,9 @@ function confirmReset() {
 
 // ─── Download HTML with embedded data ───
 function downloadHTML() {
+  // Sync current .value to HTML attributes so outerHTML captures typed values
+  document.querySelectorAll('input').forEach(function(inp){ inp.setAttribute('value', inp.value); });
+  document.querySelectorAll('textarea').forEach(function(ta){ ta.textContent = ta.value; });
   const data = collectData();
   const dataJson = JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>');
   // Inject auto-load script
@@ -1513,10 +1536,54 @@ document.addEventListener('DOMContentLoaded', () => {
   initEl.addEventListener('input', () => { initEl.dataset.manual = '1'; });
 });
 
+// ═══ SAVING THROWS ═══
+const savingProfs = { str:false, dex:false, con:false, int:false, wis:false, cha:false };
+
+function renderSavingThrows() {
+  const grid = document.getElementById('savingThrowsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  ABILITIES.forEach(ab => {
+    const prof = savingProfs[ab.key];
+    const bonus = Math.floor((abilityScores[ab.key] - 10) / 2);
+    const profVal = parseInt(document.getElementById('profBonus')?.value) || 2;
+    const total = prof ? bonus + profVal : bonus;
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    row.innerHTML = `
+      <div class="skill-proficiency${prof?' active':''}" id="svprof-${ab.key}" onclick="toggleSaveProf('${ab.key}')"></div>
+      <span class="skill-name">${ab.name}</span>
+      <span class="skill-bonus" id="svbonus-${ab.key}">${total>=0?'+':''}${total}</span>
+    `;
+    grid.appendChild(row);
+  });
+}
+
+function toggleSaveProf(key) {
+  savingProfs[key] = !savingProfs[key];
+  const el = document.getElementById('svprof-'+key);
+  if (el) el.classList.toggle('active', savingProfs[key]);
+  updateSavingThrows();
+  scheduleAutoSave();
+}
+
+function updateSavingThrows() {
+  const profVal = parseInt(document.getElementById('profBonus')?.value) || 2;
+  ABILITIES.forEach(ab => {
+    const bonus = Math.floor((abilityScores[ab.key] - 10) / 2);
+    const total = savingProfs[ab.key] ? bonus + profVal : bonus;
+    const el = document.getElementById('svbonus-'+ab.key);
+    if (el) el.textContent = (total>=0?'+':'')+total;
+  });
+}
+
+
 // ═══ INIT ═══
 renderAbilities();
 renderSkills();
 renderSpellSlots();
+renderSavingThrows();
+
 
 // Try to restore autosave
 const savedData = loadFromKey(AUTOSAVE_KEY);
